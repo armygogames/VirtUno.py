@@ -189,6 +189,7 @@ class AddPlayers:
                 return self.cardChosen
             if self.MC == True:
                 mt = False
+                print("----- inputs -----")
                 print("Cards : "+str(self.Cards))
                 if pend == True:
                     if self.check(2)==True:
@@ -277,6 +278,7 @@ class AddPlayers:
                     elif x == "WildDraw4":
                         self.cardChosen.remove(x)
                         self.cardChosen.append("WildDraw4 "+choice(["Red","Green","Blue","Yellow"]))
+                print("----- inputs -----")
                 return self.cardChosen
 
 
