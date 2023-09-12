@@ -6,6 +6,7 @@ delay = 1.5
 def say(string):
     print(" ")
     print(string)
+    print(" ")
 
 def split(string,ch):
     res = []
@@ -36,9 +37,9 @@ class Game:
     "7 Blue", "7 Green", "7 Red", "7 Yellow",
     "8 Blue", "8 Green", "8 Red", "8 Yellow",
     "9 Blue", "9 Green", "9 Red", "9 Yellow",
-    "Add2 Blue", "Add2 Green", "Add2 Red", "Add2 Yellow",
     "Reverse Blue", "Reverse Green", "Reverse Red", "Reverse Yellow",
     "Skip Blue", "Skip Green", "Skip Red", "Skip Yellow",
+    "Add2 Blue", "Add2 Green", "Add2 Red", "Add2 Yellow",
     "Wild", "WildDraw4"
     ]
 
@@ -49,12 +50,13 @@ class Game:
         self.Players = Players
         self.cardAmount = cardAmount
         self.Card = self.Cards[randint(0,39)]
+        say("Game's card : "+self.Card)
         self.direction = 1
         self.pendingCard = 0
         for Player in Players:
             for x in range(self.cardAmount):Player.Cards.append(self.takeCard())
 
-    def takeCard(self):return choice(self.Cards) #str(self.Cards[randint(0,39)])
+    def takeCard(self):return choice(self.Cards) #str(self.Cards[randint(48,len(self.Cards)-1)])
 
     def changeTurn(self):
         if self.direction == 1:
@@ -83,12 +85,11 @@ class Game:
     def move(self):
         plr = self.Players[self.plrTurn]
         if plr.isPlaying==True:
-            print(plr.name+" is Moving...")
-            say("Game's card : "+self.Card)
-            wait(delay)
             plrmove = plr.move(self.Card,True if self.pendingCard>0 else False)
             process = None
-            if plrmove==None:
+            print(plr.name+" is Moving...")
+            wait(delay)
+            if plrmove==None or plrmove == []:
                 if self.pendingCard==0:
                     plr.Cards.append(self.takeCard())
                     print(plr.name+" Has drawn a card")
@@ -102,26 +103,27 @@ class Game:
                     wait(delay)
                     self.changeTurn()
                     return None
-            else:
-                for x in plrmove:
-                    process = self.cardHandler(x)
-                    if process=="R":
-                        self.changeTurn()
-                        print("The game's direction has been reversed.")
-                        self.Card = plrmove[0]
-                    elif process=="S":
-                        print(self.Players[self.plrTurn].name+" Has been skipped.")
-                        self.Card = plrmove[0]
-                    elif process==self.pendingCard:
-                        print("The game's pending card is now "+str(self.pendingCard))
-                        self.Card = plrmove[0]
-                    else:self.Card = plrmove[0] 
-            print(plr.name+" Has placed "+str(plrmove)+" ({} cards remaining)".format(str(len(plr.Cards)-len(plrmove))))
+            print(plr.name+" Has placed "+str(plrmove)+" ({} cards remaining)".format(str(len(plr.Cards))))
+            wait(delay)
             for x in plrmove:
-                #spl = split(x," ")
-                if x in plr.Cards:plr.Cards.remove(x)
-                '''if spl[0] == "Wild" or spl[0] == "WildDraw4":
-                    plr.Cards.remove(spl)'''
+                process = self.cardHandler(x)
+                if process=="R":
+                    self.changeTurn()
+                    print("The game's direction has been reversed.")
+                    self.Card = plrmove[0]
+                elif process=="S":
+                    print(self.Players[self.plrTurn].name+" Has been skipped.")
+                    self.Card = plrmove[0]
+                elif process==self.pendingCard:
+                    print("----- The game's pending card is now "+str(self.pendingCard)+" -----")
+                    self.Card = plrmove[0]
+                else:self.Card = plrmove[0]
+            say("Game's card : "+str(self.Card))
+            num = len(plrmove)
+            for x in plrmove:
+                if x in plr.Cards and num>0:
+                    plr.Cards.remove(x)
+                    num-=1
             if len(plr.Cards)==0:
                 say(plr.name+" Has finished the game")
                 self.Players.remove(plr)
@@ -151,7 +153,7 @@ class AddPlayers:
         for x in self.Cards:
             if mode == 1:
                 if split(x," ")[0] == split(self.cardChosen[len(self.cardChosen)-1]," ")[0]:return True
-            elif mode == delay:
+            elif mode == 2:
                 if split(x," ")[0] == "Add2" or x == "WildDraw4":return True
         return False
 
@@ -165,6 +167,7 @@ class AddPlayers:
                     spl = split(x," ")
                     if pend == True:
                         if spl[0] == "Add2" or x == "WildDraw4":
+                            if x == "WildDraw4":x = "WildDraw4 "+choice(["Red","Green","Blue","Yellow"])
                             self.cardChosen.append(x)
                             break
                     else:
@@ -183,32 +186,36 @@ class AddPlayers:
                             self.loop()
                             break
                 if self.cardChosen == []:return None #If no card is True, will return None
-                #shuffle(self.cardChosen)
                 return self.cardChosen
             if self.MC == True:
+                mt = False
                 print("Cards : "+str(self.Cards))
-                while inp:=input("Move :"): #Asks for input and will run the elif, and else otherwise
-                    if self.cardChosen !=[]:
-                        print("Chosen Cards : "+str(self.cardChosen))
+                if pend == True:
+                    if self.check(2)==True:
+                        while inp:=input("Adds :"):
+                            if inp in self.Cards:
+                                inpSplit = split(inp," ")
+                                if inpSplit[0] == "Add2" or inp == "WildDraw4":
+                                    self.cardChosen.append(inp)
+                                    self.Cards.remove(inp)
+                                    print("Cards chosen : "+str(self.cardChosen))
+                                    mt = True
+                                else:print("Please add a draw card or draw anyways.")
+                            elif inp == "put" or inp == 'draw':break
+                            else:print("Please add a draw card or draw anyways.")
+                while True: #Asks for input and will run the elif, and else otherwise
+                    if mt == True:break
+                    inp = input("Move :")
                     if inp in self.Cards:
                         inpSplit = split(inp," ")
-                        if pend == True:
-                            if self.check(2)==True:
-                                while inp:=input("Move :"):
-                                    if inpSplit[0] == "Add2" or inp == "WildDraw4":
-                                        self.cardChosen.append(inp)
-                                        self.Cards.remove(inp)
-                                        print("Added "+inp)
-                                    elif inp == "Add":break
-                                    else:print("Please add a draw card or draw anyways.")
-                            else:break
-                        else:
+                        if pend == False:
                             if inp == "Wild":
                                 if len(self.Cards)>1:
                                     while inp:=input("Add another card or pick a color :"):
                                         if inp in self.Cards:
                                             self.cardChosen.append(inp)
                                             self.cardChosen.append("Wild")
+                                            self.Cards.remove("Wild")
                                             break
                                         elif inp in ["Green","Red","Blue","Yellow"]:
                                             self.cardChosen.append("Wild "+inp)
@@ -217,12 +224,14 @@ class AddPlayers:
                                     while inp:=input("Pleace choose a color :"):
                                         if inp in ["Green","Red","Blue","Yellow"]:
                                             self.cardChosen.append("Wild "+inp)
+                                            self.Cards.remove("Wild")
                                             break
                                 break
                             elif inp == "WildDraw4":
                                 while inp:=input("Please choose a color :"):
                                     if inp in ["Green","Red","Blue","Yellow"]:
                                             self.cardChosen.append("WildDraw4 "+inp)
+                                            self.Cards.remove("WildDraw4")
                                             break
                                 break
                             elif inpSplit[0] == cat1: #checks if number of card is the same
@@ -245,7 +254,7 @@ class AddPlayers:
                                 self.cardChosen.append(str(inp))
                                 self.Cards.remove(inp)
                                 if self.check(1) == True:
-                                    while inp:=input("Add another card? :"):
+                                    while inp:=input("Add another card? or put? :"):
                                         if inp in self.Cards:
                                             inpSplit = split(inp," ")
                                             if inpSplit[0] == split(self.cardChosen[len(self.cardChosen)-1]," ")[0]:
@@ -260,6 +269,14 @@ class AddPlayers:
                             else:print("Card not match")
                     elif inp.lower()=='draw':return None
                     else:print("Card Doesn't Exist.")
+                for x in self.cardChosen:
+                    res = None
+                    if x == "Wild":
+                        self.cardChosen.remove(x)
+                        self.cardChosen.append("Wild "+choice(["Red","Green","Blue","Yellow"]))
+                    elif x == "WildDraw4":
+                        self.cardChosen.remove(x)
+                        self.cardChosen.append("WildDraw4 "+choice(["Red","Green","Blue","Yellow"]))
                 return self.cardChosen
 
 
