@@ -8,6 +8,8 @@ def say(string):
     print(string)
     print(" ")
 
+say("----- VirtUno by armygogames on github -----")
+
 def split(string,ch):
     res = []
     temp = ""
@@ -108,7 +110,6 @@ class Game:
             for x in plrmove:
                 process = self.cardHandler(x)
                 if process=="R":
-                    self.changeTurn()
                     print("The game's direction has been reversed.")
                     self.Card = plrmove[0]
                 elif process=="S":
@@ -268,7 +269,7 @@ class AddPlayers:
                                     break
                                 else:break
                             else:print("Card not match")
-                    elif inp.lower()=='draw':return None
+                    elif inp.lower()=='draw':break
                     else:print("Card Doesn't Exist.")
                 for x in self.cardChosen:
                     res = None
